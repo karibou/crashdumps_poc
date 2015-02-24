@@ -1,0 +1,59 @@
+#cloud-config
+# Update apt database on first boot
+# (ie run apt-get update)
+#
+# Default: true
+# Aliases: apt_update
+package_update: true
+
+# Upgrade the instance on first boot
+# (ie run apt-get upgrade)
+#
+# Default: false
+# Aliases: apt_upgrade
+#package_upgrade: true
+hostname: crashdumps
+manage_etc_hosts: true
+ssh_import_id: [louis-bouchard]
+
+
+packages:
+ - nfs-kernel-server
+ - crash
+ - squid-deb-proxy
+ - squid-deb-proxy-client
+
+fs_setup:
+   - label: crashfiles
+     filesystem: ext4
+     device: /dev/vdc
+     partition: auto
+   - label: longterm
+     filesystem: ext4
+     device: /dev/vdd
+     partition: auto
+
+mounts:
+ - [ vdb, /squidproxy, auto, "defaults,noexec" ]
+ - [ vdc, /crashfiles, auto, "defaults,noexec" ]
+ - [ vdd, /longterm, auto, "defaults,noexec" ]
+
+runcmd:
+ - echo "StrictHostKeyChecking no" > /root/.ssh/config
+ - chmod 777 /squidproxy
+ - chmod 777 /crashfiles
+ - chmod 777 /longterm
+ - mkdir /squidproxy/cache
+ - mkdir /squidproxy/log
+ - chown proxy:proxy /squidproxy/cache
+ - chown proxy:proxy /squidproxy/log
+ - [ sed, -i, 's/^cache_dir aufs  \/var/cache_dir aufs \/squidproxy/', /etc/squid-deb-proxy/squid-deb-proxy.conf ]
+ - [ sed, -i, 's/^cache_access_log  \/var/cache_access_log \/squidproxy/', /etc/squid-deb-proxy/squid-deb-proxy.conf]
+ - [ sed, -i, 's/^cache_log  \/var/cache_log \/squidproxy/', /etc/squid-deb-proxy/squid-deb-proxy.conf]
+ - [ sed, -i, 's/^cache_store_log  \/var/cache_store_log \/squidproxy/', /etc/squid-deb-proxy/squid-deb-proxy.conf]
+ 
+
+power_state:
+ delay: now
+ mode: reboot
+ message: Rebooting after crashdump setup

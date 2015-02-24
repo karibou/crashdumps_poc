@@ -1,0 +1,6 @@
+nova boot --flavor 4 \
+	--key_name lbouchard_lcy02 \
+	--image f6910f50-5d11-4b1a-9632-088a1c8e9eaa \
+	--block-device source=volume,id=dae38e26-f66f-47b0-a7e5-26b1ad73b84d,dest=volume,device=vdd,shutdown=preserve \
+	--block-device source=volume,id=e2503786-7851-4c7f-ba9e-8a3abb7c0ac3,dest=volume,device=vde,shutdown=preserve \
+	--user-data crashdumps crashdumps
